@@ -1,5 +1,6 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-
+const Helper = require('./helper')
+import { addNewBlogWith, loginWith } from './helper'
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
     await request.post('http:localhost:3001/api/testing/reset')
@@ -27,29 +28,20 @@ describe('Blog app', () => {
 
   describe('Login', () => {
     test('succeeds with correct credentials', async ({ page }) => {
-        const login_btn = await page.getByRole('button', { name: 'login' })
-        await page.getByRole('textbox').first().fill('mluukkai')
-        await page.getByRole('textbox').last().fill('salainen')
-        await login_btn.click()
+        await Helper.loginWith(page, 'mluukkai', 'salainen')
         const locator = await page.getByText('blogs')
         await expect(locator).toBeVisible()
     })
 
     test('fails with wrong credentials', async ({ page }) => {
-        const login_btn = await page.getByRole('button', { name: 'login' })
-        await page.getByRole('textbox').first().fill('bloh')
-        await page.getByRole('textbox').last().fill('blih')
-        await login_btn.click()
+        await Helper.loginWith(page, 'blih', 'bloh')
         const locator = await page.getByText('blogs')
         await expect(locator).toBeHidden()    
     })
   })
   describe('When logged in', () => {
     beforeEach(async ({ page }) => {
-        const login_btn = await page.getByRole('button', { name: 'login' })
-        await page.getByRole('textbox').first().fill('mluukkai')
-        await page.getByRole('textbox').last().fill('salainen')
-        await login_btn.click()
+        Helper.loginWith(page, 'mluukkai', 'salainen')
     })
 
     const new_blog = {
@@ -58,18 +50,18 @@ describe('Blog app', () => {
         url: 'http://localhost:5173/',
     }  
     test('a new blog can be created', async ({ page }) => {
-        await page.getByRole('button', {name: 'create'}).click()
-        const forms = await page.getByRole('textbox').all()
-        await forms[0].fill(new_blog.title)
-        await forms[1].fill(new_blog.author)
-        await forms[2].fill(new_blog.url)
-
-        await page.getByRole('button', {name: 'create'}).click()
-
+        await Helper.addNewBlogWith(page, new_blog)
         const vis_blog = await page.getByText(new_blog.title)
         await expect(vis_blog).toBeVisible()
+    })        
+    test('liking a blog post is possible', async({page}) => {
+            await Helper.addNewBlogWith(page, new_blog)
+            await page.getByRole('button', {name: 'Show'}).click()
+            const likes_before = await page.getByTestId('likes')
+            await page.getByRole('button', {name: 'Like'}).click()
+            const likes_after = await page.getByTestId('likes')
+            await expect(likes_after).not.toBe(likes_before)
 
-
-    })
+        })
   })    
 })
