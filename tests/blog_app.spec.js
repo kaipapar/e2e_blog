@@ -43,5 +43,33 @@ describe('Blog app', () => {
         const locator = await page.getByText('blogs')
         await expect(locator).toBeHidden()    
     })
-  })  
+  })
+  describe('When logged in', () => {
+    beforeEach(async ({ page }) => {
+        const login_btn = await page.getByRole('button', { name: 'login' })
+        await page.getByRole('textbox').first().fill('mluukkai')
+        await page.getByRole('textbox').last().fill('salainen')
+        await login_btn.click()
+    })
+
+    const new_blog = {
+        title: 'new title',
+        author: 'its a me',
+        url: 'http://localhost:5173/',
+    }  
+    test('a new blog can be created', async ({ page }) => {
+        await page.getByRole('button', {name: 'create'}).click()
+        const forms = await page.getByRole('textbox').all()
+        await forms[0].fill(new_blog.title)
+        await forms[1].fill(new_blog.author)
+        await forms[2].fill(new_blog.url)
+
+        await page.getByRole('button', {name: 'create'}).click()
+
+        const vis_blog = await page.getByText(new_blog.title)
+        await expect(vis_blog).toBeVisible()
+
+
+    })
+  })    
 })
