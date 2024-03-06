@@ -15,7 +15,6 @@ describe('Blog app', () => {
   })
 
   test('Login form is shown', async ({ page }) => {
-    // ...
     const locator = await page.getByText('Log in to application')
     const login_btn = await page.getByRole('button', { name: 'login' })
     const username = await page.getByRole('textbox').first()
@@ -25,4 +24,24 @@ describe('Blog app', () => {
     await expect(username).toBeVisible()
     await expect(password).toBeVisible()
   })
+
+  describe('Login', () => {
+    test('succeeds with correct credentials', async ({ page }) => {
+        const login_btn = await page.getByRole('button', { name: 'login' })
+        await page.getByRole('textbox').first().fill('mluukkai')
+        await page.getByRole('textbox').last().fill('salainen')
+        await login_btn.click()
+        const locator = await page.getByText('blogs')
+        await expect(locator).toBeVisible()
+    })
+
+    test('fails with wrong credentials', async ({ page }) => {
+        const login_btn = await page.getByRole('button', { name: 'login' })
+        await page.getByRole('textbox').first().fill('bloh')
+        await page.getByRole('textbox').last().fill('blih')
+        await login_btn.click()
+        const locator = await page.getByText('blogs')
+        await expect(locator).toBeHidden()    
+    })
+  })  
 })
